@@ -2,19 +2,48 @@ import React, { useState } from 'react'
 import { useToast } from './components/ui/use-toast'
 import { Toaster } from './components/ui/toaster'
 import { Button } from './components/ui/button'
+import { saveJournalEntry } from './services/googleSheets'
 
 function App() {
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [content, setContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement Google Sheets integration
-    toast({
-      title: "Success!",
-      description: "Journal entry saved successfully.",
-    })
-    setIsFormOpen(false)
+    if (!content.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some content for your journal entry.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const success = await saveJournalEntry(content)
+      if (success) {
+        toast({
+          title: "Success!",
+          description: "Journal entry saved successfully.",
+        })
+        setContent('')
+        setIsFormOpen(false)
+      }
+    } catch (error) {
+      // Only show error toast for actual errors, not redirects
+      if (error instanceof Error && error.message !== 'Failed to fetch') {
+        toast({
+          title: "Error",
+          description: "Failed to save journal entry. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -31,10 +60,15 @@ function App() {
             <textarea
               className="w-full h-48 p-4 border rounded-md mb-4"
               placeholder="Write your journal entry here..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               required
+              disabled={isSubmitting}
             />
             <div className="flex gap-2">
-              <Button type="submit">Save Entry</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Entry'}
+              </Button>
               <Button 
                 type="button" 
                 variant="outline"
