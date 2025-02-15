@@ -31,6 +31,8 @@ jobs:
         run: yarn install
       
       - name: Build
+        env:
+          VITE_GOOGLE_SCRIPT_URL: ${{ secrets.VITE_GOOGLE_SCRIPT_URL }}
         run: yarn build
       
       - name: Setup Pages
