@@ -32,7 +32,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-
 # TypeScript
 *.tsbuildinfo
 .qodo
